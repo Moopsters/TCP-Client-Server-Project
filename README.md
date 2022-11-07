@@ -1,4 +1,4 @@
-# TCP-Client-Server-Project
+# TCP/UDP-Client-Server-Project
 Side project implementation of basic client server manipulation of data. 
 
 Note: The current implementation utilizes a Username/Password text file that is formatted as (Username, Password)
