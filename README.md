@@ -9,7 +9,7 @@ running instance of the server. Otherwise, they will not be allowed to login on 
 Current TCP implementations:<br />
 <br />
 send user: Send a message to a specified user if they are logged on at the time of request.<br />
-send all: Send a message to all users that are currently logged one (minus the sender).<br />
+sendall: Send a message to all users that are currently logged one (minus the sender).<br />
 who: List all of the users that are currently logged on in the chatroom.<br />
 login: Log in using verified username/password based on server knowledge.<br />
 newuser: Create a new user, add it to the username/password text, and add it to the current running server.<br />
