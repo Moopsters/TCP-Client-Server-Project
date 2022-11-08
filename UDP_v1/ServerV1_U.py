@@ -5,6 +5,8 @@ Ultimate goal will be to have a running server for users to request various form
 import socket           #import the required modules
 from threading import Thread
 import cv2 as cv
+import pickle
+import hmac
 import sys
 
 HOST = "127.0.0.1"      #Host ip assignment
