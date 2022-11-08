@@ -5,6 +5,8 @@ import socket           #Import required modules
 from threading import Thread
 import threading
 import cv2 as cv
+import pickle
+import hmac
 import sys
 
 HOST = "127.0.0.1"      #Hostname of the server
