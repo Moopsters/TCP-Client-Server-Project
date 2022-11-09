@@ -16,7 +16,8 @@ loggedUser = ''         #String for who is logged in. Empty by default
 print('\nMy media client. Version One.\n')
 
 data = str()                                                            #declare a global string for data sending/receiving
-mediaPlayer = cv.imread()
+#mediaPlayer = cv.imread()
+dataplaceholder = str()
 
 def listenForMessages():                                                #define our function to talking to the server
     global data                                                         #use the global data being received
@@ -27,7 +28,8 @@ def listenForMessages():                                                #define 
 def playMedia():                                                        #Define a function to thread for playing media
     global mediaPlayer
     while not stop_event.is_set():
-        mediaPlayer = socketU.recv(1024).decode()                       #This thread will only be responsible for playing media received as we go further
+        dataplaceholder = socketU.recv(1024).decode()                       #This thread will only be responsible for playing media received as we go further
+        print(dataplaceholder)
 
 def menu():                                                             
     global loggedUser                                                   #use the global data and user for printing
@@ -46,6 +48,7 @@ def menu():
                 socketT.sendall(" ".join(menuChoice).encode())
             case "Play":
                 socketU.connect((HOST, PORT))                               #Initially using same port as the TCP connection. Will change if this doesnt work.
+                mediaThreadU.start()
                 socketU.sendall(" ".join(menuChoice).encode())
             case "Logout":
                 print("See you later!")
@@ -58,6 +61,7 @@ def menu():
                     socketU.close()
                     mediaThreadU.join()
                 except Exception as e:
+                    print("Media thread never started/connected")
                     pass
                 listenThreadT.join()                                        #join the threads
                 sys.exit()                                                  #exit the program
