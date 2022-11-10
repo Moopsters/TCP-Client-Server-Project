@@ -13,6 +13,8 @@ HOST = "127.0.0.1"      #Hostname of the server
 PORT = 10597            #Port currently being used by the server
 loggedUser = ''         #String for who is logged in. Empty by default
 
+stop_event = threading.Event()                                              #create thread event
+
 print('\nMy media client. Version One.\n')
 
 data = str()                                                            #declare a global string for data sending/receiving
@@ -22,23 +24,24 @@ dataplaceholder = str()
 def listenForMessages():                                                #define our function to talking to the server
     global data                                                         #use the global data being received
     while not stop_event.is_set():                                      #run the thread until the specified event
-        data = socketT.recv(1024).decode()                                    #dedicate the thread to receiving and printing data
+        data = socketT.recv(1024).decode()                                   #dedicate the thread to receiving and printing data
         print(data)
 
 def playMedia():                                                        #Define a function to thread for playing media
-    global mediaPlayer
+    #global mediaPlayer
+    print("Made it here")
     while not stop_event.is_set():
-        dataplaceholder = socketU.recv(1024).decode()                       #This thread will only be responsible for playing media received as we go further
-        print(dataplaceholder)
+        dataplaceholder = socketU.recvfrom(1024)                          #This thread will only be responsible for playing media received as we go further
+        print(dataplaceholder[0].decode())
 
 def menu():                                                             
     global loggedUser                                                   #use the global data and user for printing
     global data 
     
-    print(""""Welcome to your media player program. Please use one of the below commands:
-                Start - Establish conection with the server via a username and password (Example: "Start 'Username' 'Password'")
-                Play - Play the desired media (URL, source, etc.)
-                Logout - Close the program""")
+    print("""Welcome to your media player program. Please use one of the below commands:
+Start - Establish conection with the server via a username and password (Example: "Start 'Username' 'Password'")
+Play - Play the desired media (URL, source, etc.)
+Logout - Close the program""")
 
     while(True):                                                        #Menu template
         menuChoice = input().split()     
@@ -47,9 +50,8 @@ def menu():
                 listenThreadT.start()
                 socketT.sendall(" ".join(menuChoice).encode())
             case "Play":
-                socketU.connect((HOST, PORT))                               #Initially using same port as the TCP connection. Will change if this doesnt work.
+                socketU.sendto(" ".join(menuChoice).encode(), (HOST, PORT))
                 mediaThreadU.start()
-                socketU.sendall(" ".join(menuChoice).encode())
             case "Logout":
                 print("See you later!")
                 socketT.sendall(menuChoice[0].encode())
@@ -67,8 +69,6 @@ def menu():
                 sys.exit()                                                  #exit the program
             case _:
                 print("Unkown command. Please use one of the given commands")
-
-stop_event = threading.Event()                                              #create thread event
 
 try:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketT:       #create a socket named s using IPV4 address and connect with TCP
