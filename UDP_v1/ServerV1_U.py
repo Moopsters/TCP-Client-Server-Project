@@ -10,6 +10,8 @@ import pickle
 import hmac
 import sys
 
+from requests import request
+
 HOST = "127.0.0.1"      #Host ip assignment
 PORT = 10597            #Random unused port
 MAXCLIENTS = 5
@@ -29,22 +31,30 @@ socketU.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 socketT.bind((HOST, PORT))                                                        #bind the socket using the host/port given 
 socketU.bind((HOST, PORT))      
 socketT.listen(MAXCLIENTS)                                                        #listen for the max amount of clients given
-socketU.listen(MAXCLIENTS)
 
-def sendMedia():
-    global currentUsers                                                     #use the global logged in users dictionary
+def sendMedia(destination):                                                           #use the global logged in users dictionary
     try:
-        while not stop_event:
-            client_socket, client_address = socketU.accept()
-            sendingMedia.append(client_socket)
-            print(f"Will send 'media' to {client_address} via UDP here")
+        while not stop_event.is_set():
+            socketU.sendto("Received".encode(), destination)
             stop_event.set()
     except KeyboardInterrupt:                                               
         pass
-    
+
+def listenForRequests():                                                #define our thread function
+    while True:                                                         #while the thread is running
+        requestData = socketU.recvfrom(1024)                              #receive user input on the specified thread
+        requestInput = requestData[0].decode().split()                                    #parse the data
+        if requestInput != []:                                             #if the user actually sent data
+            match requestInput[0]:
+                case "Play":
+                    mediaThread = Thread(target = sendMedia, args = (requestData[1],))
+                    mediaThread.daemon = True
+                    mediaThread.start()
+                case _:
+                    print("User did not send usable data")
 
 def listenForClients(cs):                                                   #define our thread function
-    global currentUsers                                                     
+    global currentUsers                                                 
     try:
         while True:                                                         #while the thread is running
             try:
@@ -56,9 +66,8 @@ def listenForClients(cs):                                                   #def
                         del currentUsers[userName]                          #remove them from the dictionary of logged in users
                 break
             if userInput != []:                                             #if the user actually sent data
+                print(f"{userInput[0]}")
                 match userInput[0]:
-                    case "Play":
-                        mediaThread.start()
                     case _:
                         print("User did not send usable data")
     except KeyboardInterrupt:                                               #stop the server with interrupt
@@ -76,12 +85,13 @@ try:
         print(f"Connected by {client_address}")                             #maintain server log
 
         chatThread = Thread(target = listenForClients, args = (client_socket,))      #create thread with 'listenForClients" function and send socket info as arg
-        mediaThread = Thread(target = sendMedia)
+        requestThread = Thread(target= listenForRequests)
 
         chatThread.daemon = True                                                     #set thread to daemon
-        mediaThread.daemon = True
+        requestThread.daemon = True
 
         chatThread.start()                                                           #start the thread
+        requestThread.start()
 except KeyboardInterrupt:                                                   #if interrupted
     if currentUsers != {}:                                                  #close all the sockets
         for key, cs in currentUsers.copy().items():
